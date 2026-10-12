@@ -20,6 +20,7 @@ const scene = document.createElement('canvas');
 const ctx = scene.getContext('2d');
 
 const params = new URLSearchParams(location.search);
+const DBG_TS = Number(params.get('ts') || 1);
 const store = {
   get(k, d) { try { const v = localStorage.getItem('metamorph.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem('metamorph.' + k, JSON.stringify(v)); } catch {} },
@@ -88,6 +89,8 @@ G.advance = () => {
     G.hud.lifePulse = 1;
   }
   G.audio.riser(1.4);
+  G.aberr(0.8);
+  G.shock(G.W / 2, G.H / 2, 0.8, 1.4, 2.2);
   G.startStage(i, prev);
 };
 
@@ -182,7 +185,12 @@ document.getElementById('again').addEventListener('click', () => {
   G.audio.unlock();
   newRun(G.stage);
 });
-document.addEventListener('visibilitychange', () => { if (document.hidden) pause(true); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { pause(true); G.audio.ctx?.suspend(); }
+  else if (!G.paused) G.audio.ctx?.resume();
+});
+glCanvas.addEventListener('webglcontextlost', (e) => e.preventDefault());
+glCanvas.addEventListener('webglcontextrestored', () => { G.gfx.init(); resize(); });
 G.onKey = (code) => {
   if (code === 'Escape' || code === 'KeyP') pause(!G.paused);
   if (code === 'KeyN' && params.has('debug')) G.stage?.forceWin?.();
@@ -190,6 +198,8 @@ G.onKey = (code) => {
 };
 
 // ---------- main loop ----------
+let errCount = 0;
+function reportError(e) { if (errCount++ < 5) console.error(e); }
 let last = performance.now();
 let perf = { acc: 0, n: 0 };
 function frame(now) {
@@ -197,9 +207,10 @@ function frame(now) {
   let rdt = Math.min(0.05, (now - last) / 1000);
   last = now;
   if (G.paused) rdt = 0;
+  rdt *= DBG_TS;
 
   // Adaptive resolution: if we can't hold ~45fps, drop the render scale.
-  if (rdt > 0) {
+  if (rdt > 0 && G.time > 3) {
     perf.acc += rdt; perf.n++;
     if (perf.n >= 120) {
       const avg = perf.acc / perf.n;
@@ -219,20 +230,24 @@ function frame(now) {
   G.realDt = rdt;
 
   document.body.classList.toggle('title', G.state === 'title');
-  G.stage?.tick(dt);
+  try { G.stage?.tick(dt); } catch (e) { reportError(e); }
   G.particles.update(dt);
   G.floaters.update(dt);
   G.stars.update(dt, G.W, G.H);
   G.shake.update(rdt);
   G.hud.update(rdt);
   G.gfx.update(rdt);
+  const beat = G.audio.beat();
+  G.beat = beat;
+  G.gfx.neb.level = 1 + beat * 0.35;
+  G.gfx.bloom = 1 + beat * 0.12;
 
   ctx.setTransform(G.dpr, 0, 0, G.dpr, 0, 0);
   ctx.clearRect(0, 0, G.W, G.H);
   ctx.save();
   ctx.translate(G.shake.x, G.shake.y);
   G.stars.draw(ctx);
-  G.stage?.draw(ctx);
+  try { G.stage?.draw(ctx); } catch (e) { reportError(e); }
   G.particles.draw(ctx);
   G.floaters.draw(ctx);
   ctx.restore();

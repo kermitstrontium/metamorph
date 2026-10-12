@@ -294,6 +294,12 @@ export class Connect4 extends Stage {
       this.drawDisc(ctx, x, this.by - cs * 0.75 + Math.sin(this.t * 6) * 3, 1, 1, 0.55);
     }
 
+    const tw = this.morphSrc?.result?.line;
+    if (tw && this.t < 0.6) {
+      const a = this.morphSrc.center(tw[0]), b = this.morphSrc.center(tw[2]);
+      const ex = (b.x - a.x) * 0.22, ey = (b.y - a.y) * 0.22;
+      neonLine(ctx, a.x - ex, a.y - ey, b.x + ex, b.y + ey, C.yellow, 7 * (1 - this.t / 0.6), 1 - this.t / 0.6);
+    }
     const win = this.result?.cells;
     for (const d of this.discs) {
       const onWin = win && win.some((w) => w.c === d.c && w.r === d.r);

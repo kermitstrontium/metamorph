@@ -54,13 +54,13 @@ export class Galaga extends Stage {
     this.layout();
     this.ship = { x: G.W / 2, y: this.shipY, a: -Math.PI / 2, alive: true, inv: 0 };
     this.buildFormation();
-    if (prev?.kind === 'asteroids') this.fromAsteroids(prev);
+    if (prev?.kind === 'asteroids' && prev.rocks.length) this.fromAsteroids(prev);
     else this.flyIn();
     // Warp: stars streak, then settle into a vertical scroll.
     G.stars.scrollTarget = 1100; G.stars.streakTarget = 1;
     if (!G.stars.list.length) G.stars.fill(G.W, G.H, 140);
     this.after(1.2, () => { G.stars.scrollTarget = 70; G.stars.streakTarget = 0.3; });
-    this.after(0.5, () => G.card('GALAGA', `Shoot down ${this.goal}`, 'Drag anywhere to move · auto-fire', C.yellow));
+    this.after(0.5, () => G.card('GALAGA', `Shoot down ${this.goal}`, 'Drag anywhere to move · auto-fire', C.yellow, { y: G.H * 0.52 }));
   }
 
   layout() {
@@ -325,7 +325,7 @@ export class Galaga extends Stage {
     this.aliens = this.aliens.filter((a) => !a.dead);
     if (s.alive && s.inv <= 0 && this.phase === 'play') {
       for (const b of this.ebullets) if (Math.abs(b.x - s.x) < 8 && Math.abs(b.y - s.y) < 10) { this.killShip(); break; }
-      if (s.alive) for (const a of this.aliens) if (a.state === 'dive' && Math.abs(a.x - s.x) < hw + 6 && Math.abs(a.y - s.y) < hh + 6) { this.killAlien(a); this.killShip(); break; }
+      if (s.alive) for (const a of this.aliens) if (a.state === 'dive' && Math.abs(a.x - s.x) < hw + 6 && Math.abs(a.y - s.y) < hh + 6) { this.killShip(); this.killAlien(a); break; }
     }
     this.aliens = this.aliens.filter((a) => !a.dead);
   }

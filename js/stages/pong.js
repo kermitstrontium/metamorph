@@ -43,7 +43,7 @@ export class Pong extends Stage {
       this.serve(1);
       this.introDur = 0.8;
     }
-    this.after(0.4, () => G.card('PONG', `First to ${this.target}`, 'Drag to move · hit with the edge to angle it', C.cyan));
+    this.after(0.4, () => G.card('PONG', `First to ${this.target}`, 'Drag to move · hit with the edge to angle it', C.cyan, { y: lerp(this.aiY, this.netY, 0.45) }));
   }
 
   layout() {

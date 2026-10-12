@@ -1,0 +1,28 @@
+<!doctype html><body style="margin:0;background:#000;overflow:hidden"><canvas id="c" style="display:block"></canvas>
+<script type="module">
+import { spritePixels } from '../js/stages/galaga.js';
+const q = new URLSearchParams(location.search);
+const S = Number(q.get('s') || 512), pad = q.has('mask') ? 0.16 : 0;
+const c = document.getElementById('c'); c.width = c.height = S;
+const x = c.getContext('2d');
+const g = x.createRadialGradient(S * 0.5, S * 0.42, S * 0.05, S * 0.5, S * 0.5, S * 0.75);
+g.addColorStop(0, '#24104f'); g.addColorStop(0.6, '#0b0722'); g.addColorStop(1, '#040210');
+x.fillStyle = g; x.fillRect(0, 0, S, S);
+const inner = S * (1 - pad * 2), o = S * pad;
+const G = inner * 0.66, gx = o + (inner - G) / 2, gy = o + (inner - G) / 2, cell = G / 3;
+const glow = (col, blur, fn) => { x.save(); x.shadowColor = col; x.shadowBlur = blur; fn(); x.restore(); };
+const line = (x1, y1, x2, y2, col, w) => { x.strokeStyle = col; x.lineWidth = w; x.lineCap = 'round'; x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke(); };
+const grad = x.createLinearGradient(gx, gy, gx + G, gy + G);
+grad.addColorStop(0, '#3ef2ff'); grad.addColorStop(1, '#ff3bd4');
+for (let pass = 0; pass < 3; pass++) glow(pass < 2 ? '#7f6bff' : '#fff', [S * 0.06, S * 0.025, 0][pass], () => {
+  const col = pass < 2 ? grad : 'rgba(255,255,255,0.85)', w = pass < 2 ? S * 0.034 : S * 0.012;
+  for (const k of [1, 2]) { line(gx + cell * k, gy, gx + cell * k, gy + G, col, w); line(gx, gy + cell * k, gx + G, gy + cell * k, col, w); }
+});
+// X top-left, disc centre, alien bottom-right: three forms in one grid.
+const cx0 = gx + cell / 2, cy0 = gy + cell / 2, r = cell * 0.26;
+glow('#3ef2ff', S * 0.04, () => { line(cx0 - r, cy0 - r, cx0 + r, cy0 + r, '#3ef2ff', S * 0.03); line(cx0 + r, cy0 - r, cx0 - r, cy0 + r, '#3ef2ff', S * 0.03); line(cx0 - r, cy0 - r, cx0 + r, cy0 + r, '#e0feff', S * 0.01); line(cx0 + r, cy0 - r, cx0 - r, cy0 + r, '#e0feff', S * 0.01); });
+glow('#ff3bd4', S * 0.05, () => { x.fillStyle = '#ff3bd4'; x.beginPath(); x.arc(gx + cell * 1.5, gy + cell * 1.5, cell * 0.3, 0, Math.PI * 2); x.fill(); x.fillStyle = '#ffd3f4'; x.beginPath(); x.arc(gx + cell * 1.5, gy + cell * 1.5, cell * 0.16, 0, Math.PI * 2); x.fill(); });
+const p = cell * 0.062, ax = gx + cell * 2.5, ay = gy + cell * 2.5;
+glow('#ffd84a', S * 0.04, () => { for (const px of spritePixels('bee', 0)) { x.fillStyle = `rgb(${px.color.join(',')})`; x.fillRect(ax + px.x * p - p / 2, ay + px.y * p - p / 2, p, p); } });
+document.title = 'ready';
+</script>

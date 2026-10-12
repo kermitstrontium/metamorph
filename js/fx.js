@@ -141,6 +141,7 @@ export class Stars {
     this.alpha = 1;
   }
   add(x, y, o = {}) {
+    if (this.list.length > 520) this.list.splice(0, this.list.length - 520);
     this.list.push({
       x, y, z: o.z ?? rand(0.2, 1), tw: rand(TAU), ts: rand(1, 4),
       vx: o.vx ?? rand(-4, 4), vy: o.vy ?? rand(-4, 4), b: o.b ?? rand(0.4, 1), fade: o.fade ?? 0,

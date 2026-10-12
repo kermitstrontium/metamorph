@@ -13,8 +13,8 @@ export class Hud {
     this.lifePulse = 0;
   }
 
-  showCard(title, sub = '', hint = '', color = C.cyan, dur = 2.6) {
-    this.card = { title, sub, hint, color, t: 0, dur };
+  showCard(title, sub = '', hint = '', color = C.cyan, o = {}) {
+    this.card = { title, sub, hint, color, t: 0, dur: o.dur ?? 2.8, y: o.y };
   }
 
   update(dt) {
@@ -92,7 +92,7 @@ export class Hud {
     const G = this.G, c = this.card;
     const t = c.t, inT = clamp(t / 0.45, 0, 1), out = clamp((c.dur - t) / 0.5, 0, 1);
     const a = Math.min(ease.outCubic(inT), out);
-    const cx = G.W / 2, cy = G.safe.t + 52 + Math.min(G.H * 0.13, 110);
+    const cx = G.W / 2, cy = c.y ?? G.safe.t + 52 + Math.min(G.H * 0.13, 110);
     const track = lerp(18, 2, ease.outExpo(inT)) + (1 - out) * 10;
     ctx.save();
     ctx.textAlign = 'center';
@@ -110,7 +110,7 @@ export class Hud {
     ctx.fillText(c.title, cx - glitch, cy);
     ctx.fillStyle = rgb(C.cyan, a * 0.7);
     ctx.fillText(c.title, cx + glitch, cy);
-    ctx.fillStyle = rgb(mix(c.color, C.white, 0.6), a);
+    ctx.fillStyle = rgb(mix(c.color, C.white, 0.4), a);
     ctx.fillText(c.title, cx, cy);
     // Slice glitch: a random horizontal band shifted sideways.
     if (inT < 1 || Math.random() < 0.06) {

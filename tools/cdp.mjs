@@ -4,7 +4,7 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 
 const PORT = process.env.CDP_PORT || 9333;
 
-export async function open(url, { width = 390, height = 844, dpr = 2 } = {}) {
+export async function open(url, { width = 390, height = 844, dpr = 2, mobile = true } = {}) {
   const t = await (await fetch(`http://127.0.0.1:${PORT}/json/new?about:blank`, { method: 'PUT' })).json();
   const ws = new WebSocket(t.webSocketDebuggerUrl);
   await new Promise((r, j) => { ws.onopen = r; ws.onerror = j; });
@@ -22,7 +22,7 @@ export async function open(url, { width = 390, height = 844, dpr = 2 } = {}) {
   await send('Page.enable');
   await send('Network.enable');
   await send('Network.setCacheDisabled', { cacheDisabled: true });
-  await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: dpr, mobile: true });
+  await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: dpr, mobile });
   await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
   await send('Page.navigate', { url });
   await new Promise((r) => setTimeout(r, 1500));

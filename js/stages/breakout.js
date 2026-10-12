@@ -32,7 +32,7 @@ export class Breakout extends Stage {
       this.introDur = 0.6;
     }
     G.stars.scrollTarget = 0; G.stars.streakTarget = 0;
-    this.after(0.8, () => G.card('BREAKOUT', 'Clear the wall', 'Drag to move · tap to launch', C.violet));
+    this.after(0.8, () => G.card('BREAKOUT', 'Clear the wall', 'Drag to move · tap to launch', C.violet, { y: G.H * 0.52 }));
   }
 
   layout() {
@@ -127,7 +127,7 @@ export class Breakout extends Stage {
     G.burst(cx, cy, { n: 8, color: mix(b.color, C.white, 0.5), speed: 220, life: 0.3 });
     G.shake.add(0.05);
     if (this.combo > 0 && this.combo % 5 === 0) G.floaters.add(cx, cy - 22, `${this.combo}× COMBO`, C.yellow, 18);
-    if (Math.random() < 0.13) this.pickups.push({ x: cx, y: cy, kind: pick(['multi', 'wide', 'laser']), t: 0 });
+    if (Math.random() < 0.16) this.pickups.push({ x: cx, y: cy, kind: pick(['multi', 'wide', 'laser']), t: 0 });
     this.lastBrick = { x: b.x, y: b.y, w: b.w, h: b.h, color: b.color };
     if (!this.bricks.some((q) => q.alive)) this.complete();
   }

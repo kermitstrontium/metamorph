@@ -32,6 +32,16 @@ export class Audio {
     this.step = 0;
     this.transpose = 0;
     this.chordTones = [57, 60, 64];
+    this.kicks = [];
+  }
+
+  // 0..1 envelope that spikes on each kick drum, for visuals.
+  beat() {
+    if (!this.ctx || !this.musicOn) return 0;
+    const now = this.ctx.currentTime;
+    let last = -1;
+    for (const k of this.kicks) if (k <= now && k > last) last = k;
+    return last < 0 ? 0 : Math.exp(-(now - last) * 7);
   }
 
   unlock() {
@@ -71,9 +81,6 @@ export class Audio {
       for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
       this.nextTime = ctx.currentTime + 0.1;
       this.timer = setInterval(() => this.schedule(), 25);
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) ctx.suspend(); else ctx.resume();
-      });
     }
     if (this.ctx.state !== 'running') this.ctx.resume();
   }
@@ -104,7 +111,7 @@ export class Audio {
     if (!ctx || ctx.state !== 'running' || !this.track) return;
     if (this.nextTime < ctx.currentTime - 0.2) this.nextTime = ctx.currentTime + 0.05;
     while (this.nextTime < ctx.currentTime + 0.12) {
-      if (this.step % 16 === 0 && this.pending) { this.track = this.pending; this.pending = null; }
+      if (this.step % 4 === 0 && this.pending) { this.track = this.pending; this.pending = null; this.step = 0; }
       this.playStep(this.track, this.step, this.nextTime);
       this.nextTime += 60 / this.track.bpm / 4;
       this.step++;
@@ -125,7 +132,7 @@ export class Audio {
     this.chordTones = chord;
     const stepDur = 60 / tr.bpm / 4;
     this.delay.delayTime.setValueAtTime(stepDur * 3, t);
-    if (tr.kick[s] === 'x') this.kick(t);
+    if (tr.kick[s] === 'x') { this.kick(t); this.kicks.push(t); if (this.kicks.length > 8) this.kicks.shift(); }
     if (tr.snare && tr.snare[s] === 'x') this.snare(t);
     if (tr.hat && tr.hat[s] === 'x') this.hat(t, s % 4 === 2 ? 0.09 : 0.05);
     const b = tr.bass[s];

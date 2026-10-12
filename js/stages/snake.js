@@ -80,6 +80,9 @@ export class Snake extends Stage {
       const tgt = pts[i];
       while (cur.x !== tgt.x || cur.y !== tgt.y) {
         if (cur.x !== tgt.x) cur.x += Math.sign(tgt.x - cur.x); else cur.y += Math.sign(tgt.y - cur.y);
+        // Never let the stitched body cross itself.
+        const seen = path.findIndex((q) => q.x === cur.x && q.y === cur.y);
+        if (seen >= 0) path.length = seen;
         path.push({ ...cur });
       }
     }
@@ -441,7 +444,7 @@ export class Snake extends Stage {
     const g = this.g;
     const gold = f.kind === 'gold';
     const col = gold ? C.yellow : mix(C.cyan, C.yellow, k);
-    const s = lerp(r0, g * 0.3, k) * born * (1 + 0.1 * Math.sin(f.t * 6));
+    const s = Math.max(0.1, lerp(r0, g * 0.3, k) * born * (1 + 0.1 * Math.sin(f.t * 6)));
     const a = f.t * 1.5;
     ctx.save();
     ctx.translate(x, y);

@@ -128,8 +128,8 @@ export class Asteroids extends Stage {
       let dx = s.x - h.x, dy = s.y - h.y;
       const d = Math.hypot(dx, dy) || 1;
       dx /= d; dy /= d;
-      const sp = rand(25, 60);
-      this.rocks.push(makeRock(s.x, s.y, size, this.scale, { vx: dx * sp + rand(-15, 15), vy: dy * sp + rand(-15, 15), grow: 0, r0: sn.g * 0.32 }));
+      const sp = rand(45, 90) * (size === 3 ? 0.7 : 1);
+      this.rocks.push(makeRock(s.x, s.y, size, this.scale, { vx: dx * sp + rand(-20, 20), vy: dy * sp + rand(-20, 20), grow: 0, r0: sn.g * 0.32 }));
     });
     for (const m of sn.mines) {
       this.rocks.push(makeRock(sn.px(m.x), sn.py(m.y), 1, this.scale, { vx: rand(-40, 40), vy: rand(-40, 40), grow: 0, r0: sn.g * 0.3 }));
