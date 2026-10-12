@@ -30,7 +30,7 @@ export async function open(url, { width = 390, height = 844, dpr = 2, mobile = t
     logs,
     send,
     async eval(expr) {
-      const r = await send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true });
+      const r = await send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true }, 200000);
       if (r.timeout) return 'TIMEOUT';
       if (r.result?.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description ?? 'eval error');
       return r.result?.result?.value;

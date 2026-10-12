@@ -60,6 +60,7 @@ export class Pong extends Stage {
     b.vx = 0; b.vy = 0;
     this.serving = { dir, t: 0.9 };
     this.hits = 0;
+    if (this.ai) this.ai.err = 0;
   }
 
   speed() { return Math.min(950, 400 + this.G.loop * 50 + this.hits * 22); }
@@ -137,7 +138,8 @@ export class Pong extends Stage {
     // The CPU only commits once the ball crosses the net, moves at a capped
     // speed, and misjudges more on fast shots, so sharp edge hits beat it.
     const aiSpeed = 275 + G.loop * 45;
-    const reacting = b.vy < 0 && b.y < this.netY;
+    // A serve heading its way is a gimme: react at once, aim dead centre.
+    const reacting = b.vy < 0 && (b.y < this.netY || this.hits === 0);
     const tx = reacting ? this.predictX() + ai.err : G.W / 2 + (b.x - G.W / 2) * 0.2;
     const want = clamp((tx - ai.x) * 8, -aiSpeed, aiSpeed);
     ai.vx = lerp(ai.vx, want, 1 - Math.exp(-10 * dt));
