@@ -45,7 +45,7 @@ export class Galaga extends Stage {
     this.bullets = [];
     this.ebullets = [];
     this.kills = 0;
-    this.goal = clamp(22 + G.loop * 4, 22, 31);
+    this.goal = clamp(27 + G.loop * 2, 27, 32);
     this.diveT = 2.5;
     this.fireT = 0;
     this.phase = 'intro';
@@ -155,7 +155,7 @@ export class Galaga extends Stage {
     const G = this.G;
     const inForm = this.aliens.filter((a) => a.state === 'form');
     const diving = this.aliens.filter((a) => a.state === 'dive').length;
-    if (!inForm.length || diving >= 3 + G.loop) return;
+    if (!inForm.length || diving >= 4 + G.loop) return;
     const lead = pick(inForm);
     const group = [lead];
     if (lead.type === 'boss') group.push(...inForm.filter((a) => a.row === 1 && Math.abs(a.col - lead.col) <= 1).slice(0, 2));
@@ -305,7 +305,7 @@ export class Galaga extends Stage {
 
     if (this.phase === 'play') {
       this.diveT -= dt;
-      if (this.diveT <= 0) { this.launchDive(); this.diveT = rand(1.1, 2.0) / (1 + G.loop * 0.3); }
+      if (this.diveT <= 0) { this.launchDive(); this.diveT = rand(0.8, 1.6) / (1 + G.loop * 0.3); }
     }
 
     // Collisions

@@ -57,7 +57,7 @@ export class Audio {
       comp.attack.value = 0.003; comp.release.value = 0.2;
       this.master.connect(comp).connect(ctx.destination);
       this.musicBus = ctx.createGain();
-      this.musicBus.gain.value = this.musicOn ? 0.8 : 0;
+      this.musicBus.gain.value = this.musicOn ? 0.62 : 0;
       this.musicBus.connect(this.master);
       this.sfxBus = ctx.createGain();
       this.sfxBus.gain.value = this.sfxOn ? 1 : 0;
@@ -95,7 +95,7 @@ export class Audio {
     return b;
   }
 
-  setMusic(on) { this.musicOn = on; if (this.musicBus) this.musicBus.gain.setTargetAtTime(on ? 0.8 : 0, this.ctx.currentTime, 0.1); }
+  setMusic(on) { this.musicOn = on; if (this.musicBus) this.musicBus.gain.setTargetAtTime(on ? 0.62 : 0, this.ctx.currentTime, 0.1); }
   setSfx(on) { this.sfxOn = on; if (this.sfxBus) this.sfxBus.gain.setTargetAtTime(on ? 1 : 0, this.ctx.currentTime, 0.05); }
 
   setTrack(key, loop = 0) {
@@ -252,16 +252,16 @@ export class Audio {
   note(i = 0, o = {}) {
     const ch = this.chordTones;
     const m = ch[i % 3] + 12 * Math.floor(i / 3) + 12 + (o.oct ?? 0) * 12 + this.transpose;
-    this.tone({ f: mtof(m), type: o.type ?? 'triangle', vol: o.vol ?? 0.16, d: o.d ?? 0.35, verb: 0.5 });
+    this.tone({ f: mtof(m), type: o.type ?? 'triangle', vol: o.vol ?? 0.22, d: o.d ?? 0.35, verb: 0.5 });
     if (o.sparkle) this.tone({ f: mtof(m + 12), type: 'sine', vol: 0.06, d: 0.5, t: 0.05, verb: 0.7 });
   }
 
   tap() { this.tone({ f: 900, f1: 600, type: 'sine', vol: 0.08, d: 0.06, verb: 0.1 }); }
   place(i) { this.note(i, { sparkle: true }); this.tone({ f: 120, f1: 60, vol: 0.2, d: 0.12, verb: 0 }); }
   drop() { this.tone({ f: 200, f1: 70, type: 'sine', vol: 0.35, d: 0.18, verb: 0.2 }); this.noise({ vol: 0.12, d: 0.08, f: 3000, verb: 0 }); }
-  eat(n) { this.note(n, { type: 'square', vol: 0.09, d: 0.22, sparkle: true }); }
-  laser() { this.tone({ f: 1400 + Math.random() * 200, f1: 240, type: 'square', vol: 0.045, d: 0.09, verb: 0.15, lp: 3500 }); }
-  pew() { this.tone({ f: 1900, f1: 500, type: 'sawtooth', vol: 0.035, d: 0.07, verb: 0.1, lp: 4000 }); }
+  eat(n) { this.note(n, { type: 'square', vol: 0.15, d: 0.22, sparkle: true }); }
+  laser() { this.tone({ f: 1400 + Math.random() * 200, f1: 240, type: 'square', vol: 0.07, d: 0.09, verb: 0.15, lp: 3500 }); }
+  pew() { this.tone({ f: 1900, f1: 500, type: 'sawtooth', vol: 0.055, d: 0.07, verb: 0.1, lp: 4000 }); }
   boom(size = 1) {
     this.noise({ vol: 0.35 * size, d: 0.25 + 0.4 * size, f: 2600, f1: 90, verb: 0.5 });
     this.tone({ f: 110, f1: 32, type: 'sine', vol: 0.5 * size, d: 0.3 + 0.3 * size, verb: 0.2 });
@@ -273,10 +273,10 @@ export class Audio {
     this.tone({ f: 440, f1: 55, type: 'sawtooth', vol: 0.18, d: 0.9, verb: 0.5, lp: 1800 });
     this.noise({ vol: 0.3, d: 0.8, f: 1500, f1: 60, verb: 0.6 });
   }
-  win() { [0, 1, 2, 3, 4, 5, 6].forEach((i) => this.tone({ f: mtof(this.chordTones[i % 3] + 12 * Math.floor(i / 3) + 12), type: 'triangle', vol: 0.12, d: 0.5, t: i * 0.07, verb: 0.6 })); }
+  win() { [0, 1, 2, 3, 4, 5, 6].forEach((i) => this.tone({ f: mtof(this.chordTones[i % 3] + 12 * Math.floor(i / 3) + 12), type: 'triangle', vol: 0.18, d: 0.5, t: i * 0.07, verb: 0.6 })); }
   // Rising whoosh used during morphs.
   riser(dur = 1.6) {
-    this.noise({ vol: 0.22, a: dur * 0.85, d: dur * 0.25, type: 'bandpass', f: 300, f1: 6000, q: 2, verb: 0.6 });
+    this.noise({ vol: 0.3, a: dur * 0.85, d: dur * 0.25, type: 'bandpass', f: 300, f1: 6000, q: 2, verb: 0.6 });
     this.tone({ f: 80, f1: 640, type: 'sawtooth', vol: 0.06, a: dur * 0.9, d: 0.2, lp: 2000, verb: 0.5 });
   }
   impact() {

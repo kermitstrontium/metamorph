@@ -91,7 +91,7 @@ export class Asteroids extends Stage {
     this.rocks = [];
     this.bullets = [];
     this.killed = 0;
-    this.goal = 24 + G.loop * 6;
+    this.goal = 32 + G.loop * 6;
     this.sticks = { L: null, R: null };
     this.fireT = 0;
     this.phase = 'intro';

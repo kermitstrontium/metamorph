@@ -1,0 +1,11 @@
+[Unit]
+Description=Metamorph static site (tailnet :9444 -> 127.0.0.1:8089)
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/harry/ai-share/metamorph/host/serve.py --port 8089 --bind 127.0.0.1
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target

@@ -1,5 +1,5 @@
 // Cache-first service worker so the game runs offline once installed.
-const VERSION = 'metamorph-v1';
+const VERSION = 'metamorph-20261012-203944';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest',
   './js/main.js', './js/util.js', './js/gfx.js', './js/fx.js', './js/audio.js', './js/input.js', './js/hud.js',
