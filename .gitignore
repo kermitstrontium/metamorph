@@ -1,0 +1,6 @@
+tools/shots/
+.claude/
+.mcp.json
+.vscode/
+.idea/
+*.log
