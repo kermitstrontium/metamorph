@@ -4,6 +4,10 @@ import { haptic } from '../input.js';
 import { drawRock, drawShip } from './asteroids.js';
 
 // 11x8 pixel aliens, two animation frames each. a/b/c map to the palette.
+const SLOTS = [];
+[['boss', [2, 3, 4, 5]], ['fly', [0, 1, 2, 3, 4, 5, 6, 7]], ['fly', [0, 1, 2, 3, 4, 5, 6, 7]], ['bee', [0, 1, 2, 3, 4, 5, 6, 7]], ['bee', [0, 1, 2, 3, 4, 5, 6, 7]]]
+  .forEach(([type, cols], row) => cols.forEach((col) => SLOTS.push([type, row, col])));
+
 export const SPRITES = {
   bee: {
     pal: { a: C.yellow, b: C.blue, c: C.red },
@@ -45,7 +49,8 @@ export class Galaga extends Stage {
     this.bullets = [];
     this.ebullets = [];
     this.kills = 0;
-    this.goal = clamp(27 + G.loop * 2, 27, 32);
+    this.goal = 54 + G.loop * 6;
+    this.reinforceT = 0;
     this.diveT = 2.5;
     this.fireT = 0;
     this.phase = 'intro';
@@ -93,10 +98,28 @@ export class Galaga extends Stage {
   }
 
   buildFormation() {
-    const rows = [['boss', [2, 3, 4, 5]], ['fly', [0, 1, 2, 3, 4, 5, 6, 7]], ['fly', [0, 1, 2, 3, 4, 5, 6, 7]], ['bee', [0, 1, 2, 3, 4, 5, 6, 7]], ['bee', [0, 1, 2, 3, 4, 5, 6, 7]]];
-    rows.forEach(([type, cols], row) => cols.forEach((col) => {
-      this.aliens.push({ type, row, col, hp: type === 'boss' ? 2 : 1, x: 0, y: 0, rot: 0, state: 'form', ph: rand(TAU), reveal: 1 });
-    }));
+    for (const [type, row, col] of SLOTS) this.aliens.push(this.newAlien(type, row, col));
+  }
+  newAlien(type, row, col) { return { type, row, col, hp: type === 'boss' ? 2 : 1, x: 0, y: 0, rot: 0, state: 'form', ph: rand(TAU), reveal: 1 }; }
+
+  // Fresh waves swoop in to refill empty formation slots, so the goal can
+  // outnumber a single formation.
+  reinforce() {
+    const G = this.G;
+    const taken = new Set(this.aliens.map((a) => a.row + ',' + a.col));
+    const free = SLOTS.filter(([, r, c]) => !taken.has(r + ',' + c));
+    const side = Math.random() < 0.5 ? -1 : 1;
+    free.forEach(([type, row, col], k) => {
+      const a = this.newAlien(type, row, col);
+      const sl = this.slot(a);
+      a.path = new Path([[G.W / 2 + side * G.W * 0.55, -30], [G.W / 2 - side * G.W * 0.1, G.H * 0.32], [G.W / 2 + side * G.W * 0.3, G.H * 0.5], [sl.x, sl.y + 110], [sl.x, sl.y]]);
+      a.state = 'morph';
+      a.delay = this.t + k * 0.07;
+      a.dur = 1.8;
+      a.x = -100; a.y = -100;
+      this.aliens.push(a);
+    });
+    if (free.length) G.floaters.add(G.W / 2, this.top + this.sy * 5.5, 'REINFORCEMENTS', C.red, 16);
   }
 
   slot(a) {
@@ -304,6 +327,9 @@ export class Galaga extends Stage {
     }
 
     if (this.phase === 'play') {
+      this.reinforceT -= dt;
+      const left = this.goal - this.kills;
+      if (this.aliens.length < 14 && left + 8 > this.aliens.length && this.reinforceT <= 0) { this.reinforce(); this.reinforceT = 4; }
       this.diveT -= dt;
       if (this.diveT <= 0) { this.launchDive(); this.diveT = rand(0.8, 1.6) / (1 + G.loop * 0.3); }
     }

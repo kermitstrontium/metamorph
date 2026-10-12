@@ -51,6 +51,29 @@ export class Breakout extends Stage {
     for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
       this.bricks.push({ c, r, x: this.bx + c * this.bw + 2, y: this.by + r * this.bh + 2, w: this.bw - 4, h: this.bh - 4, hp: r === 0 ? 2 : 1, color: ROW_COLORS[r], alive: true, solid: 0, flash: 0 });
     }
+    // A handful of bomb bricks (never in the armoured top row).
+    const pool = this.bricks.filter((b) => b.r > 0);
+    for (let i = 0; i < 6 && pool.length; i++) {
+      const b = pool.splice(Math.floor(rand(pool.length)), 1)[0];
+      b.bomb = true; b.hp = 1; b.color = C.red;
+    }
+  }
+
+  // Blast hits every neighbour once; neighbouring bombs chain after a beat.
+  detonate(b) {
+    const G = this.G;
+    const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+    G.audio.boom(0.9);
+    G.shake.add(0.35);
+    G.shock(cx, cy, 1.1, 0.8, 0.7);
+    G.flash(C.orange, 0.1);
+    G.burst(cx, cy, { n: 50, color: [C.red, C.orange, C.yellow, C.white], speed: 520, life: 0.7 });
+    G.particles.ring(cx, cy, C.orange, 6, this.bw * 1.6, 0.45, 4);
+    haptic(1);
+    for (const n of this.bricks) {
+      if (n === b || !n.alive || !n.solid || Math.abs(n.c - b.c) > 1 || Math.abs(n.r - b.r) > 1) continue;
+      this.hitBrick(n, null, true);
+    }
   }
 
   fromGalaga(gal) {
@@ -112,7 +135,7 @@ export class Breakout extends Stage {
   onSwipe(d) { if (d === 'U' && this.phase === 'play') this.launch(); }
   onKey(code) { if ((code === 'Space' || code === 'ArrowUp') && this.phase === 'play') this.launch(); }
 
-  hitBrick(b, ball) {
+  hitBrick(b, ball, blast = false) {
     const G = this.G;
     b.hp--;
     b.flash = 1;
@@ -120,6 +143,7 @@ export class Breakout extends Stage {
     const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
     if (b.hp > 0) { G.audio.hit(); b.color = mix(b.color, C.white, 0.35); return; }
     b.alive = false;
+    if (b.bomb) this.after(blast ? 0.09 : 0, () => this.detonate(b));
     this.combo++;
     G.audio.note(this.combo - 1, { type: 'square', vol: 0.08, d: 0.22, sparkle: this.combo > 4 });
     G.addScore(40 + this.combo * 10, cx, cy, b.color, 13);
@@ -127,7 +151,7 @@ export class Breakout extends Stage {
     G.burst(cx, cy, { n: 8, color: mix(b.color, C.white, 0.5), speed: 220, life: 0.3 });
     G.shake.add(0.05);
     if (this.combo > 0 && this.combo % 5 === 0) G.floaters.add(cx, cy - 22, `${this.combo}× COMBO`, C.yellow, 18);
-    if (Math.random() < 0.16) this.pickups.push({ x: cx, y: cy, kind: pick(['multi', 'wide', 'laser']), t: 0 });
+    if (Math.random() < 0.19) this.pickups.push({ x: cx, y: cy, kind: pick(['multi', 'wide', 'laser']), t: 0 });
     this.lastBrick = { x: b.x, y: b.y, w: b.w, h: b.h, color: b.color };
     if (!this.bricks.some((q) => q.alive)) this.complete();
   }
@@ -161,8 +185,11 @@ export class Breakout extends Stage {
       this.balls.push(...add);
       G.floaters.add(pd.x, this.paddleY - 30, 'MULTIBALL', C.cyan, 16);
     } else if (k === 'wide') {
-      pd.tw = this.baseW * 1.6; pd.wideT = 10;
-      G.floaters.add(pd.x, this.paddleY - 30, 'WIDE', C.green, 16);
+      // Each WIDE stacks on the last (capped at 60% of the field); the timer refreshes.
+      pd.wideStacks = (pd.wideStacks ?? 0) + 1;
+      pd.tw = Math.min(this.baseW * (1 + 0.6 * pd.wideStacks), (this.R - this.L) * 0.6);
+      pd.wideT = 10;
+      G.floaters.add(pd.x, this.paddleY - 30, pd.wideStacks > 1 ? `WIDE ×${pd.wideStacks}` : 'WIDE', C.green, 16);
     } else {
       pd.laserT = 8;
       G.floaters.add(pd.x, this.paddleY - 30, 'LASERS', C.red, 16);
@@ -180,8 +207,9 @@ export class Breakout extends Stage {
     if (ax.on && this.t > 1.2) pd.x = clamp(pd.x + ax.x * 460 * dt, this.L + pd.w / 2, this.R - pd.w / 2);
     pd.vx = (pd.x - (pd.lx ?? pd.x)) / Math.max(dt, 1e-4); pd.lx = pd.x;
     pd.wideT = Math.max(0, pd.wideT - dt);
-    if (pd.wideT <= 0) pd.tw = this.baseW;
+    if (pd.wideT <= 0) { pd.tw = this.baseW; pd.wideStacks = 0; }
     pd.w = lerp(pd.w, pd.tw, 1 - Math.exp(-8 * dt));
+    pd.x = clamp(pd.x, this.L + pd.w / 2, this.R - pd.w / 2);
     pd.squash = Math.max(0, pd.squash - dt * 5);
     pd.laserT = Math.max(0, pd.laserT - dt);
     if (pd.laserT > 0 && this.phase === 'play') {
@@ -317,6 +345,16 @@ export class Breakout extends Stage {
       ctx.fillStyle = rgb(mix(col, C.white, 0.6), 0.55);
       ctx.fillRect(b.x + 3, b.y + 2, b.w - 6, 1.2);
       if (b.hp > 1) { ctx.fillStyle = rgb(C.white, 0.8); ctx.fillRect(b.x + b.w / 2 - 2, b.y + b.h / 2 - 2, 4, 4); }
+      if (b.bomb) {
+        // Bomb glyph with a flickering fuse.
+        const bx = b.x + b.w / 2, by = b.y + b.h / 2 + 1, r = b.h * 0.28;
+        ctx.fillStyle = rgb(mix(C.red, C.white, 0.2 + 0.3 * Math.sin(t * 9)));
+        ctx.beginPath(); ctx.arc(bx, by, r, 0, TAU); ctx.fill();
+        ctx.strokeStyle = rgb(C.yellow); ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(bx + r * 0.6, by - r * 0.6); ctx.lineTo(bx + r * 1.2, by - r * 1.3); ctx.stroke();
+        ctx.fillStyle = rgb(C.white, 0.5 + 0.5 * Math.random());
+        ctx.fillRect(bx + r * 1.2 - 1.2, by - r * 1.3 - 1.2, 2.4, 2.4);
+      }
     }
     // Pickups
     for (const p of this.pickups) {

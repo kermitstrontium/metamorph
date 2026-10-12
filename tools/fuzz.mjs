@@ -3,8 +3,8 @@ const extra = {
   2: `(()=>{const s=G.stage; s.eaten=4; s.foods=[]; s.spawnFood();})()`,
   5: `(()=>{const s=G.stage; s.launch(); ['multi','wide','laser'].forEach(k=>s.applyPickup(k)); s.pickups.push({x:200,y:300,kind:'multi',t:0});})()`,
 };
-for (let st = 0; st < 7; st++) {
-  const p = await open(`http://127.0.0.1:8765/?debug&stage=${st}`);
+for (const st of (process.env.STAGES || "0,1,2,3,4,5,6").split(",").map(Number)) {
+  const p = await open(`http://127.0.0.1:${process.env.PORT||8765}/?debug&stage=${st}`);
   await p.wait(3000);
   await p.eval('G.lives = 99');
   if (extra[st]) await p.eval(extra[st]);
