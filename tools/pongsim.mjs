@@ -1,0 +1,12 @@
+import { open } from './cdp.mjs';
+const loop = Number(process.argv[2] ?? 0);
+const p = await open('http://127.0.0.1:8089/?debug&stage=6');
+await p.wait(2500);
+await p.eval(`(()=>{ G.lives=99; G.loop=${loop}; window.__pts={me:0,cpu:0};
+  const s=G.stage; const op=s.point.bind(s); s.point=(byMe)=>{ byMe?__pts.me++:__pts.cpu++; s.sp=0; s.sa=0; op(byMe); };
+  let off=0, lastVy=0; __pts.ret=0;
+  (function bot(){ const st=G.stage; if(st.kind==='pong'){ const b=st.ball; if(b.vy>0 && lastVy<0 && b.y<st.netY) __pts.ret++; if(b.vy>0 && lastVy<=0) off=(Math.random()*2-1)*st.me.w*0.42; lastVy=b.vy;
+    const tx=b.vy>0? b.x+off : G.W/2; st.me.x += Math.max(-9,Math.min(9,(tx-st.me.x))); } requestAnimationFrame(bot); })(); })()`);
+await p.wait(110000);
+console.log('loop', loop + 1, await p.eval('JSON.stringify(__pts)'), p.logs.join(' ') || '');
+await p.close(); process.exit(0);

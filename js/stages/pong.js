@@ -134,8 +134,11 @@ export class Pong extends Stage {
     this.ghosts = this.ghosts.filter((g) => g.a > 0);
 
     // AI paddle: tracks a predicted intercept with some human-ish error.
-    const aiSpeed = 300 + G.loop * 70;
-    const tx = (b.vy < 0 ? this.predictX() : G.W / 2 + (b.x - G.W / 2) * 0.3) + ai.err;
+    // The CPU only commits once the ball crosses the net, moves at a capped
+    // speed, and misjudges more on fast shots, so sharp edge hits beat it.
+    const aiSpeed = 275 + G.loop * 45;
+    const reacting = b.vy < 0 && b.y < this.netY;
+    const tx = reacting ? this.predictX() + ai.err : G.W / 2 + (b.x - G.W / 2) * 0.2;
     const want = clamp((tx - ai.x) * 8, -aiSpeed, aiSpeed);
     ai.vx = lerp(ai.vx, want, 1 - Math.exp(-10 * dt));
     if (ai.form >= 1 || this.phase !== 'intro') ai.x = clamp(ai.x + ai.vx * dt, this.L + ai.w / 2, this.R - ai.w / 2);
@@ -167,7 +170,8 @@ export class Pong extends Stage {
         const ph = p.h;
         const moving = side === 1 ? b.vy > 0 : b.vy < 0;
         if (!moving || (side === -1 && ai.form < 1)) continue;
-        if (Math.abs(b.y - py) <= ph / 2 + b.r && Math.abs(b.x - p.x) <= p.w / 2 + b.r) {
+        const grace = side === 1 ? 6 : 0;
+        if (Math.abs(b.y - py) <= ph / 2 + b.r + grace && Math.abs(b.x - p.x) <= p.w / 2 + b.r + grace) {
           this.hits++;
           const off = clamp((b.x - p.x) / (p.w / 2), -1, 1);
           const a = (side === 1 ? -Math.PI / 2 : Math.PI / 2) + off * side * 1.0;
@@ -180,7 +184,7 @@ export class Pong extends Stage {
           G.burst(b.x, b.y, { n: 10, color: side === 1 ? C.cyan : C.magenta, speed: 200, angle: side === 1 ? -Math.PI / 2 : Math.PI / 2, spread: 2, life: 0.3 });
           if (v > 700) G.shock(b.x, b.y, 0.4, 0.5, 0.4);
           if (side === 1) haptic(0.4);
-          ai.err = rand(-1, 1) * ai.w * Math.max(0.12, 0.55 - G.loop * 0.12);
+          ai.err = rand(-1, 1) * (ai.w * Math.max(0.3, 0.58 - G.loop * 0.09) + Math.max(0, v - 420) * 0.1);
         }
       }
     }
