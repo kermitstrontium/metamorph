@@ -6,7 +6,7 @@
 <title>METAMORPH</title>
 <meta name="description" content="One game, seven forms. Tic-tac-toe that becomes Connect Four, Snake, Asteroids, Galaga, Breakout and Pong.">
 <meta name="theme-color" content="#05030d">
-<meta name="metamorph-build" content="20261012-203944">
+<meta name="metamorph-build" content="20261012-204152">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -57,8 +57,8 @@
   .overlay button:active { transform: scale(.97); background: rgba(62,242,255,.2); }
   .overlay button.toggle { border-color: rgba(140,170,255,.3); box-shadow: none; color: #8b97c9; }
   .overlay button.toggle.on { border-color: rgba(77,255,154,.6); color: #cfffe3; box-shadow: 0 0 14px rgba(77,255,154,.2); }
-  .overlay button.toggle::after { content: " · OFF"; }
-  .overlay button.toggle.on::after { content: " · ON"; }
+  #menu button.toggle::after { content: " · OFF"; }
+  #menu button.toggle.on::after { content: " · ON"; }
   .final { font: 900 54px/1 ui-monospace, "SF Mono", Menlo, monospace; color: #fff; text-shadow: 0 0 20px #3ef2ff, 0 0 40px #3ef2ff; }
   .best { font-weight: 800; letter-spacing: 4px; color: #ffd84a; text-shadow: 0 0 12px rgba(255,216,74,.6); }
   .reached { color: #8b97c9; font-size: 13px; letter-spacing: 1px; max-width: 300px; margin-bottom: 18px; }
@@ -91,6 +91,7 @@
   <div class="best"></div>
   <div class="reached"></div>
   <button id="again">PLAY AGAIN</button>
+  <button id="share" class="toggle on" hidden>SHARE SCORE</button>
 </div>
 
 <script type="module" src="js/main.js"></script>

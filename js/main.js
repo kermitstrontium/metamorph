@@ -121,7 +121,21 @@ function gameOver() {
   el.querySelector('.best').textContent = isBest ? 'NEW BEST' : `BEST ${G.best.toLocaleString()}`;
   el.querySelector('.reached').textContent = `Reached ${NAMES[G.stageIndex]}${G.loop ? ` on loop ${G.loop + 1}` : ''} · ${G.stats.stages} forms cleared`;
   el.classList.remove('hidden');
+  const share = document.getElementById('share');
+  share.hidden = !(navigator.share || navigator.clipboard);
+  share.textContent = 'SHARE SCORE';
 }
+
+document.getElementById('share').addEventListener('click', async () => {
+  const where = `${NAMES[G.stageIndex]}${G.loop ? ` on loop ${G.loop + 1}` : ''}`;
+  const text = `I scored ${G.score.toLocaleString()} in METAMORPH and made it to ${where}. Your turn.`;
+  const url = location.origin + location.pathname;
+  const btn = document.getElementById('share');
+  try {
+    if (navigator.share) await navigator.share({ title: 'METAMORPH', text, url });
+    else { await navigator.clipboard.writeText(`${text} ${url}`); btn.textContent = 'COPIED'; }
+  } catch {}
+});
 
 function newRun(prev) {
   G.score = 0; G.hud.shown = 0; G.lives = 3; G.loop = 0;

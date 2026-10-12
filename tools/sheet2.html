@@ -1,0 +1,8 @@
+<!doctype html><body style="margin:0;background:#333;display:flex;flex-wrap:wrap;gap:4px;width:1700px">
+<script>
+for (const f of new URLSearchParams(location.search).get('f').split(',')) {
+  const d = document.createElement('div'); d.style.cssText='position:relative';
+  d.innerHTML = `<img src="shots/${f}" style="width:844px;height:390px;display:block"><span style="position:absolute;left:4px;top:4px;color:#ff0;font:12px monospace;background:#000a">${f}</span>`;
+  document.body.appendChild(d);
+}
+</script>
